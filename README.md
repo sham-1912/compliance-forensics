@@ -1,61 +1,48 @@
 # Compliance Forensics Engine
-> **Real-Time Consent Verification for Scam Prevention**
 
-Compliance Forensics Engine is a privacy-first, on-device consent validation platform designed to combat the rising tide of digital fraud and caller ID spoofing in India. By integrating real-time checks against centralized regulatory consent registries, the engine verifies the legitimacy of incoming calls and commercial messages before they reach the user.
+Real-time consent verification for scam prevention — native Android app (Kotlin).
 
----
+## Stack
 
-## 🏗️ On-Device Architecture
+- **Language**: Kotlin
+- **Min SDK**: 26 (Android 8.0) / **Target SDK**: 34
+- **Build**: Gradle (Kotlin DSL)
+- **UI**: XML layouts + View Binding + Material Components
+- **Networking**: Retrofit + OkHttp (mock DLT registry endpoint for hackathon scope)
+- **Storage**: SQLiteOpenHelper (local consent cache + audit log)
+- **Testing**: JUnit + Espresso
 
-```mermaid
-graph TD
-    A[Mobile Client] -->|Telephony APIs| B[Consent Gateway]
-    B -->|REST API Query| C[TRAI DLT / RBI DCA Registry]
-    B -->|Generate Proof| D[Ledger Audit Log]
-    D -->|Store Locally| E[Tamper-Proof Cache]
-```
+## Module ownership
 
-1. **Mobile Client**: Monitors incoming calls using Google's privacy-first `IncomingCallRetriever` API, keeping call processing restricted strictly to device memory.
-2. **Consent Gateway**: Performs instant REST queries to central TRAI DLT gateways to authenticate caller headers and current consent states via RBI DCA endpoints.
-3. **Ledger Audit Log**: Produces an on-device, tamper-proof proof of legitimacy by hashing and committing data locally:
-   $$P_{\text{audit}} = \text{Hash}(\text{ID}_{\text{caller}} \mathbin{\Vert} \text{Consent} \mathbin{\Vert} t)$$
+| Module | Owner | Files |
+|---|---|---|
+| UI | Person 1 | `MainActivity.kt`, `res/layout/`, `res/values/` |
+| Call detection | Person 2 | `CallReceiver.kt` |
+| Database & verification | Person 3 | `data/DatabaseHelper.kt`, `data/DltRegistryApi.kt`, `data/ConsentRepository.kt`, `data/ConsentModels.kt` |
+| Audit & integration | Person 4 | `AuditLogger.kt`, instrumented tests |
 
----
+## Getting started
 
-## 👥 Team Novaris & Roles
+1. Open this folder in **Android Studio** (Koala+ recommended) — it will
+   auto-generate the `gradlew` wrapper scripts and sync dependencies.
+   If you're on the command line instead, run `gradle wrapper` once
+   inside this folder to generate `gradlew`/`gradlew.bat`.
+2. Sync Gradle.
+3. Run on an emulator or device with API 26+.
 
-*   **Dhivyesh P** — *Consent Verification & Integration*
-*   **Sham S** — *Database Developer*
-    *   **Responsibilities**: Owns `DatabaseHelper` (local cache via `SQLiteOpenHelper`), mock DLT registry lookup logic (via Retrofit + OkHttp REST calls), and the core verification logic matching caller headers to verified consents.
-*   **Kirutick Siddhesh** — *Mobile UI & Client Developer*
-*   **Yashaswini Srinivasan Mahalakshmi** — *Ledger & Audit Log Developer*
+## Verification flow
 
----
+`CallReceiver` detects an incoming call → hands the number to
+`ConsentRepository.verifyCaller()` → checks local SQLite cache, falls
+back to the mock DLT registry via Retrofit → result flows to
+`AuditLogger` (SHA-256 hash + persistence) and to `MainActivity` for
+display.
 
-## 🛠️ Tech Flow (Database & Verification)
+## Notes
 
-```mermaid
-sequenceDiagram
-    participant App as Mobile App
-    participant DB as DatabaseHelper (SQLite)
-    participant GW as Mock DLT Registry (Retrofit)
-    
-    App->>DB: Query cached consent for header
-    alt Cache Hit
-        DB-->>App: Return consent status
-    alt Cache Miss
-        App->>GW: Fetch registration details
-        GW-->>App: Return DLT validation
-        App->>DB: Write to Local Cache
-    end
-    App->>App: Match caller header + consent
-    App-->>App: Generate Verified/Unverified Result
-```
-
----
-
-## 🚀 Hackathon Scope (48 Hours)
-*   **Interactive Mobile UI**: Displaying live verification states to the user.
-*   **Integrated Mock Database**: Local SQLite cache representing registered DLT entities.
-*   **Basic Verification Logic**: Retrofit & OkHttp logic validating incoming headers against the mock DLT registry.
-*   **Core Audit Log**: Cryptographically hashed on-device log of verification outcomes.
+- `DltRegistryApi.BASE_URL` currently points at a mock endpoint.
+  Swapping in the real TRAI DLT gateway URL is the first roadmap item
+  once credentials are available.
+- No call audio or voice biometrics are ever processed — only caller
+  metadata (number, claimed entity, consent ID), per the privacy
+  commitments in the pitch deck.
