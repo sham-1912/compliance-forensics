@@ -30,5 +30,6 @@ data class VerificationResult(
 enum class VerificationSource {
     LOCAL_CACHE,
     LIVE_REGISTRY,
-    UNKNOWN
+    UNKNOWN,
+    CHECKING
 }

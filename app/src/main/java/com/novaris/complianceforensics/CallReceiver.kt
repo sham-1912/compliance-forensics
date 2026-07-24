@@ -42,6 +42,17 @@ class CallReceiver : BroadcastReceiver() {
         val pendingResult = goAsync()
         val appContext = context.applicationContext
 
+        // Post the checking state to update the UI while looking up consent
+        VerificationResultBus.postResult(
+            com.novaris.complianceforensics.data.VerificationResult(
+                phoneNumber = incomingNumber,
+                claimingEntity = null,
+                consentId = null,
+                isVerified = false,
+                source = com.novaris.complianceforensics.data.VerificationSource.CHECKING
+            )
+        )
+
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val repository = ConsentRepository(appContext)

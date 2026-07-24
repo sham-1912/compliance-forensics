@@ -65,6 +65,8 @@ class MainActivity : AppCompatActivity() {
             }
 
             is VerificationUiState.Checking -> {
+                binding.callerNumberText.text = state.phoneNumber
+                binding.claimingEntityText.text = ""
                 binding.verificationStatusText.text = getString(R.string.status_checking)
                 binding.consentIdText.visibility = android.view.View.GONE
                 setCardAccent(R.color.accent_amber)

@@ -13,7 +13,7 @@ sealed class VerificationUiState {
 
     object Idle : VerificationUiState()
 
-    object Checking : VerificationUiState()
+    data class Checking(val phoneNumber: String) : VerificationUiState()
 
     data class Verified(
         val phoneNumber: String,
@@ -28,6 +28,8 @@ sealed class VerificationUiState {
 
     companion object {
         fun from(result: VerificationResult): VerificationUiState = when {
+            result.source == com.novaris.complianceforensics.data.VerificationSource.CHECKING ->
+                Checking(result.phoneNumber)
             result.isVerified && result.claimingEntity != null && result.consentId != null ->
                 Verified(result.phoneNumber, result.claimingEntity, result.consentId)
             else ->
