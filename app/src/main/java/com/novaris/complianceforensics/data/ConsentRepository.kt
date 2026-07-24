@@ -15,9 +15,9 @@ import android.content.Context
  */
 class ConsentRepository(
     context: Context,
-    private val api: DltRegistryApi = DltRegistryApi.create()
+    private val api: DltRegistryApi = DltRegistryApi.create(),
+    private val databaseHelper: DatabaseHelper = DatabaseHelper(context.applicationContext)
 ) {
-    private val databaseHelper = DatabaseHelper(context.applicationContext)
 
     suspend fun verifyCaller(phoneNumber: String): VerificationResult {
         databaseHelper.getCachedConsent(phoneNumber)?.let { cached ->
