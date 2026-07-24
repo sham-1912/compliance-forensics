@@ -22,13 +22,26 @@ graph TD
 
 ---
 
-## 👥 Team Novaris & Roles
+## 🛠️ Stack & Technical Specs
 
-*   **Dhivyesh P** — *Consent Verification & Integration*
-*   **Sham S** — *Database Developer*
-    *   **Responsibilities**: Owns `DatabaseHelper` (local cache via `SQLiteOpenHelper`), mock DLT registry lookup logic (via Retrofit + OkHttp REST calls), and the core verification logic matching caller headers to verified consents.
-*   **Kirutick Siddhesh** — *Mobile UI & Client Developer*
-*   **Yashaswini Srinivasan Mahalakshmi** — *Ledger & Audit Log Developer*
+- **Language**: Kotlin
+- **Min SDK**: 26 (Android 8.0) / **Target SDK**: 34
+- **Build**: Gradle (Kotlin DSL)
+- **UI**: XML layouts + View Binding + Material Components
+- **Networking**: Retrofit + OkHttp (mock DLT registry endpoint for hackathon scope)
+- **Storage**: SQLiteOpenHelper (local consent cache + audit log)
+- **Testing**: JUnit + Espresso
+
+---
+
+## 👥 Team Novaris & Module Ownership
+
+| Module | Owner | Description / Responsibilities | Files |
+|---|---|---|---|
+| **UI** | Kirutick Siddhesh | Person 1 (Team Lead / UI Developer) - Renders the incoming-call verification card, displays states. | `MainActivity.kt`, `res/layout/`, `res/values/` |
+| **Call Detection** | Dhivyesh P | Person 2 - Listens for incoming caller number before the phone rings. | `CallReceiver.kt` |
+| **Database & Verification** | **Sham S** | Person 3 (Database Developer) - Owns local SQLite cache, mock DLT registry lookup logic via Retrofit, and core verification. | `data/DatabaseHelper.kt`, `data/DltRegistryApi.kt`, `data/ConsentRepository.kt`, `data/ConsentModels.kt` |
+| **Audit & Integration** | Yashaswini Srinivasan | Person 4 - Produces a tamper-proof audit log of each verification event. | `AuditLogger.kt`, instrumented tests |
 
 ---
 
@@ -54,8 +67,16 @@ sequenceDiagram
 
 ---
 
-## 🚀 Hackathon Scope (48 Hours)
-*   **Interactive Mobile UI**: Displaying live verification states to the user.
-*   **Integrated Mock Database**: Local SQLite cache representing registered DLT entities.
-*   **Basic Verification Logic**: Retrofit & OkHttp logic validating incoming headers against the mock DLT registry.
-*   **Core Audit Log**: Cryptographically hashed on-device log of verification outcomes.
+## 🚀 Getting Started
+
+1. Open this folder in **Android Studio** (Koala+ recommended) — it will auto-generate the `gradlew` wrapper scripts and sync dependencies.
+   If you're on the command line instead, run `gradle wrapper` once inside this folder to generate `gradlew`/`gradlew.bat`.
+2. Sync Gradle.
+3. Run on an emulator or device with API 26+.
+
+---
+
+## 📝 Notes
+
+- `DltRegistryApi.BASE_URL` currently points at a mock endpoint. Swapping in the real TRAI DLT gateway URL is the first roadmap item once credentials are available.
+- No call audio or voice biometrics are ever processed — only caller metadata (number, claimed entity, consent ID), per the privacy commitments in the pitch deck.
