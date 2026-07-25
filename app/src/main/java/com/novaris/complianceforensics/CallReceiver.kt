@@ -5,6 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.telephony.TelephonyManager
 import android.util.Log
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.os.Build
+import androidx.core.app.NotificationCompat
 import com.novaris.complianceforensics.data.ConsentRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -64,12 +68,54 @@ class CallReceiver : BroadcastReceiver() {
 
                 // Person 1's module: MainActivity observes this to update the UI
                 VerificationResultBus.postResult(result)
+
+                // Show heads-up call notification
+                showHeadsUpNotification(appContext, result)
             } catch (e: Exception) {
                 Log.e(TAG, "Verification failed for $incomingNumber", e)
             } finally {
                 pendingResult.finish()
             }
         }
+    }
+
+    private fun showHeadsUpNotification(context: Context, result: com.novaris.complianceforensics.data.VerificationResult) {
+        val channelId = "cfe_call_verification"
+        val channelName = "Call Verification Notifications"
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                channelName,
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Shows real-time call consent verification alerts"
+                enableLights(true)
+                enableVibration(true)
+            }
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val emoji = if (result.isVerified) "🟢 Verified" else "🔴 No Consent Found"
+        val title = "$emoji: ${result.phoneNumber}"
+        val text = if (result.isVerified) {
+            "Verified via TRAI Registry: ${result.claimingEntity ?: "Authorized Business"}"
+        } else {
+            "Warning: No verified consent found for this business"
+        }
+
+        val notification = NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_CALL)
+            .setAutoCancel(true)
+            .build()
+
+        val notificationId = 2000 + (result.phoneNumber.hashCode() % 1000)
+        notificationManager.notify(notificationId, notification)
     }
 
     companion object {

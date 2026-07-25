@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 
 // UI-only auth state. There is no real session/token here — this exists
 // purely to drive which navigator (Auth vs Main) is mounted, which is
@@ -16,6 +17,17 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'background') {
+        setIsAuthenticated(false);
+      }
+    });
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   const value = useMemo(
     () => ({

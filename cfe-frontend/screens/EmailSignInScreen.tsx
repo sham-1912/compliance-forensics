@@ -7,15 +7,15 @@ import { colors, layout, spacing, typography } from '@/theme';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'EmailSignIn'>;
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^\d{10}$/;
 
 export function EmailSignInScreen({ navigation }: Props) {
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [touched, setTouched] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const isValid = EMAIL_REGEX.test(email);
-  const showError = touched && email.length > 0 && !isValid;
+  const isValid = PHONE_REGEX.test(phone);
+  const showError = touched && phone.length > 0 && !isValid;
 
   function handleSendOtp() {
     if (!isValid) return;
@@ -23,7 +23,7 @@ export function EmailSignInScreen({ navigation }: Props) {
     // Simulated async — no real network call.
     setTimeout(() => {
       setLoading(false);
-      navigation.navigate('OtpVerification', { email });
+      navigation.navigate('OtpVerification', { email: phone });
     }, 1200);
   }
 
@@ -32,18 +32,22 @@ export function EmailSignInScreen({ navigation }: Props) {
       <TopAppBar title="Sign in" onBack={() => navigation.goBack()} />
       <View style={styles.body}>
         <Text style={[typography.bodyMedium, styles.helper]}>
-          Enter your work email and we'll send you a one-time verification code.
+          Enter your phone number and we'll send you a one-time verification code.
         </Text>
         <InputField
-          label="Email address"
-          placeholder="you@organization.com"
-          value={email}
-          onChangeText={setEmail}
+          label="Phone number"
+          placeholder="99999 00000"
+          value={phone}
+          onChangeText={(text) => {
+            // Keep only digits
+            const digits = text.replace(/\D/g, '').slice(0, 10);
+            setPhone(digits);
+          }}
           onBlur={() => setTouched(true)}
           autoCapitalize="none"
           autoCorrect={false}
-          keyboardType="email-address"
-          errorText={showError ? 'Enter a valid email address' : undefined}
+          keyboardType="phone-pad"
+          errorText={showError ? 'Enter a valid 10-digit phone number' : undefined}
         />
         <View style={styles.ctaSpacing}>
           <Button

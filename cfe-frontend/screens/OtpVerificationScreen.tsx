@@ -14,6 +14,12 @@ import {
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'OtpVerification'>;
 
+function maskPhone(phone: string): string {
+  const clean = phone.replace(/\D/g, '');
+  if (clean.length !== 10) return phone;
+  return `+91 ${clean.slice(0, 5)} ${clean.charAt(5)}****${clean.charAt(9)}`;
+}
+
 export function OtpVerificationScreen({ navigation, route }: Props) {
   const { email } = route.params;
   const { login } = useAuth();
@@ -40,11 +46,16 @@ export function OtpVerificationScreen({ navigation, route }: Props) {
   function handleVerify() {
     if (otp.length !== 6) return;
     setVerifying(true);
-    // Simulated async verification. Typing the designated demo "wrong
-    // code" resolves as failure; any other 6-digit code succeeds.
+    // Simulated Firebase Phone Auth credential check.
+    // Fixed test number +91 9999900000 requires 123456.
     setTimeout(() => {
       setVerifying(false);
-      if (otp === MOCK_INCORRECT_OTP_DEMO) {
+      
+      const cleanPhone = email.replace(/\D/g, '');
+      const isDemoNumber = cleanPhone === '9999900000';
+      const isCorrectOtp = isDemoNumber ? (otp === '123456') : (otp !== MOCK_INCORRECT_OTP_DEMO);
+
+      if (!isCorrectOtp) {
         setShakeTrigger((n) => n + 1);
         setSnackbarVisible(true);
         setOtp('');
@@ -71,7 +82,7 @@ export function OtpVerificationScreen({ navigation, route }: Props) {
         ) : (
           <>
             <Text style={[typography.bodyMedium, styles.helper]}>
-              Code sent to {maskEmail(email)}
+              Code sent to {maskPhone(email)}
             </Text>
             <OTPInput value={otp} onChange={setOtp} triggerShake={shakeTrigger} />
 

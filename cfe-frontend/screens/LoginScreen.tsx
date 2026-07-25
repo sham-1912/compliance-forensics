@@ -25,7 +25,7 @@ export function LoginScreen({ navigation }: Props) {
 
       <View style={styles.bottomSection}>
         <Button
-          label="Continue with Email"
+          label="Continue with Phone"
           onPress={() => navigation.navigate('EmailSignIn')}
         />
         <Text style={[typography.bodySmall, styles.legal]}>
