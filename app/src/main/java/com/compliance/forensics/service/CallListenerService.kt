@@ -58,11 +58,12 @@ class CallListenerService : Service() {
     }
 
     private fun showVerificationNotification(result: CallVerificationResult) {
-        val statusText = when (result.verificationStatus) {
-            CallVerificationResult.VerificationStatus.VERIFIED -> "✅ Verified: ${result.callerName}"
-            CallVerificationResult.VerificationStatus.UNVERIFIED -> "⚠️ Unverified Caller"
-            CallVerificationResult.VerificationStatus.SPOOF -> "🚨 SPOOF DETECTED!"
-            else -> "⏳ Checking..."
+        // Use classificationResult (4-way TRAI label) for notification text
+        val statusText = when (result.classificationResult) {
+            "AUTHORISED_BANK_GOVT" -> "✅ Authorised: ${result.callerName}"
+            "PROMOTIONAL"          -> "📢 Promotional: ${result.callerName}"
+            "KNOWN"                -> "🔵 Known caller: ${result.callerName}"
+            else                   -> "⚠️ Unverified Caller — ${result.callerId}"
         }
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)

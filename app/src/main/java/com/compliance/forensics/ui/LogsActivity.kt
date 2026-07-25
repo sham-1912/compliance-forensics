@@ -91,8 +91,13 @@ class LogsActivity : AppCompatActivity() {
         lifecycleScope.launch {
             viewModel.statistics.collect { stats ->
                 stats?.let {
+                    // Show all 4 TRAI classification buckets
                     findViewById<TextView>(R.id.tvStats).text =
-                        "Total: ${it.totalLogs} | Verified: ${it.verifiedLogs} | Spoof: ${it.spoofLogs} | Unverified: ${it.unverifiedLogs}"
+                        "Total: ${it.totalLogs} | " +
+                        "✅ Auth: ${it.authorisedLogs} | " +
+                        "📢 Promo: ${it.promotionalLogs} | " +
+                        "🔵 Known: ${it.knownLogs} | " +
+                        "⚠️ Unverified: ${it.unverifiedLogs}"
                 }
             }
         }
@@ -104,13 +109,24 @@ class LogsActivity : AppCompatActivity() {
     }
 
     private fun showLogDetails(log: AuditLogEntity) {
+        // Map classification result to display label
+        val classLabel = when (log.classificationResult) {
+            "AUTHORISED_BANK_GOVT" -> "✅ Authorised Bank/Govt (1600-series)"
+            "PROMOTIONAL"          -> "📢 Promotional (140-series)"
+            "KNOWN"                -> "🔵 Known (call history)"
+            "UNVERIFIED"           -> "⚠️ Unverified"
+            else                   -> log.classificationResult
+        }
+
         val details = """
             📋 Audit Log Details
             ====================
             ID: ${log.id}
             Caller ID: ${log.callerId}
             Name: ${log.callerName}
-            Status: ${log.verificationStatus}
+            Classification: $classLabel
+            LSA (Circle): ${log.lsa}
+            Operator: ${log.operatorName}
             Time: ${log.getFormattedTimestamp()}
 
             🔐 Audit Proof Hash:

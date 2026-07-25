@@ -47,12 +47,33 @@ class AuditLogAdapter(
 
         fun bind(log: AuditLogEntity) {
             tvCallerId.text = log.callerId
-            tvCallerName.text = log.callerName
-            tvStatus.text = log.verificationStatus
+
+            // Show entity name + LSA + operator as sub-text
+            val nameText = buildString {
+                append(log.callerName.ifBlank { "Unknown Caller" })
+                if (log.lsa.isNotBlank() && log.lsa != "UNKNOWN") append(" · ${log.lsa}")
+                if (log.operatorName.isNotBlank() && log.operatorName != "UNKNOWN") append(" · ${log.operatorName}")
+            }
+            tvCallerName.text = nameText
+
+            // Show human-friendly classification label
+            tvStatus.text = classificationLabel(log.classificationResult)
             tvStatus.setTextColor(log.getStatusColor())
+
             tvTimestamp.text = log.getFormattedTimestamp()
             tvProofHash.text = "Proof: ${HashUtils.getShortHash(log.auditProofHash)}"
             btnExport.text = if (log.isExported) "✅ Exported" else "📤 Export"
         }
+
+        private fun classificationLabel(result: String): String = when (result) {
+            "AUTHORISED_BANK_GOVT" -> "✅ Authorised Bank/Govt"
+            "PROMOTIONAL"          -> "📢 Promotional"
+            "KNOWN"                -> "🔵 Known"
+            "UNVERIFIED"           -> "⚠️ Unverified"
+            // legacy labels
+            "VERIFIED"             -> "✅ Verified"
+            "SPOOF"                -> "🚨 Spoof"
+            else                   -> result
+        }
     }
-}
+}

@@ -9,18 +9,43 @@ data class CallVerificationResult(
     val verificationStatus: VerificationStatus,
     val consentHash: String,
     val rawHeaderData: String = "",
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    /** TRAI classification: AUTHORISED_BANK_GOVT | PROMOTIONAL | KNOWN | UNVERIFIED */
+    val classificationResult: String = verificationStatus.toClassificationResult(),
+    /** TRAI Licensed Service Area (one of 22 circles), or "UNKNOWN". */
+    val lsa: String = "UNKNOWN",
+    /** Inferred operator: Jio / Airtel / Vi / BSNL / UNKNOWN. */
+    val operatorName: String = "UNKNOWN"
 ) {
+    /**
+     * Legacy status enum — kept for backwards compat with ConsentGateway.
+     * New code should use [classificationResult] directly.
+     *
+     * AUTHORISED_BANK_GOVT → maps to VERIFIED (legacy)
+     * PROMOTIONAL          → PROMOTIONAL
+     * KNOWN                → KNOWN
+     * UNVERIFIED           → UNVERIFIED
+     * SPOOF                → removed; no longer produced by the pipeline
+     */
     enum class VerificationStatus {
-        VERIFIED,
+        VERIFIED,       // legacy alias for AUTHORISED_BANK_GOVT
         UNVERIFIED,
-        SPOOF
+        PROMOTIONAL,
+        KNOWN;
+
+        fun toClassificationResult(): String = when (this) {
+            VERIFIED     -> "AUTHORISED_BANK_GOVT"
+            PROMOTIONAL  -> "PROMOTIONAL"
+            KNOWN        -> "KNOWN"
+            UNVERIFIED   -> "UNVERIFIED"
+        }
     }
 
     fun toAuditLogEntity(): AuditLogEntity {
+        // Hash now covers callerId|classificationResult|timestamp per AuditLogger spec
         val proof = HashUtils.generateAuditProof(
             callerId = callerId,
-            consentHash = consentHash,
+            consentHash = classificationResult,   // classificationResult in hash payload
             timestamp = timestamp
         )
 
@@ -29,8 +54,12 @@ data class CallVerificationResult(
             timestamp = timestamp,
             callerId = callerId,
             callerName = callerName,
+            businessName = callerName,
             consentHash = consentHash,
             verificationStatus = verificationStatus.name,
+            classificationResult = classificationResult,
+            lsa = lsa,
+            operatorName = operatorName,
             auditProofHash = proof,
             rawHeaderData = rawHeaderData,
             isExported = false,

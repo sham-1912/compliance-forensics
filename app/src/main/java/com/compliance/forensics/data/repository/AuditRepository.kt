@@ -42,6 +42,21 @@ class AuditRepository private constructor(
         return dao.getLogsByCaller(callerId)
     }
 
+    /** Filter by TRAI classification: AUTHORISED_BANK_GOVT | PROMOTIONAL | KNOWN | UNVERIFIED */
+    fun getLogsByClassification(result: String): Flow<List<AuditLogEntity>> {
+        return dao.getLogsByClassification(result)
+    }
+
+    /** Filter by TRAI LSA (one of 22 telecom circles). */
+    fun getLogsForLsa(lsa: String): Flow<List<AuditLogEntity>> {
+        return dao.getLogsForLsa(lsa)
+    }
+
+    /** Filter by operator name. */
+    fun getLogsForOperator(operator: String): Flow<List<AuditLogEntity>> {
+        return dao.getLogsForOperator(operator)
+    }
+
     suspend fun getLogById(logId: Long): AuditLogEntity? {
         return dao.getLogById(logId)
     }
@@ -65,24 +80,48 @@ class AuditRepository private constructor(
         dao.deleteOldLogs(cutoff)
     }
 
+    /**
+     * Returns aggregated statistics across all classification buckets.
+     * Used by HomeViewModel to power the dashboard stats cards.
+     *
+     * TEAMMATE (Person 1 — UI): collectAsState() on HomeViewModel.stats and
+     * render callsVerified, consentViolationsBlocked, promotionalCalls, knownCalls.
+     */
     suspend fun getStatistics(): AuditStatistics {
-        val total = dao.getLogCount()
-        val verified = dao.getVerifiedCount()
-        val spoof = dao.getSpoofCount()
+        val total        = dao.getLogCount()
+        val authorised   = dao.getAuthorisedCount()
+        val promotional  = dao.getPromotionalCount()
+        val known        = dao.getKnownCount()
+        val unverified   = dao.getUnverifiedCount()
+        // Legacy spoof count for backwards compat
+        val spoof        = dao.getSpoofCount()
 
         return AuditStatistics(
-            totalLogs = total,
-            verifiedLogs = verified,
-            spoofLogs = spoof,
-            unverifiedLogs = total - verified - spoof
+            totalLogs          = total,
+            authorisedLogs     = authorised,
+            promotionalLogs    = promotional,
+            knownLogs          = known,
+            unverifiedLogs     = unverified,
+            spoofLogs          = spoof,
+            // Legacy aliases
+            verifiedLogs       = authorised,
         )
     }
 
     data class AuditStatistics(
         val totalLogs: Int,
-        val verifiedLogs: Int,
+        /** TRAI 1600-series — authorised bank/govt calls. */
+        val authorisedLogs: Int,
+        /** TRAI 140-series — registered promotional calls. */
+        val promotionalLogs: Int,
+        /** Numbers seen in call history before. */
+        val knownLogs: Int,
+        /** No TRAI prefix, no call history. */
         val unverifiedLogs: Int,
-        val spoofLogs: Int
+        /** Legacy: SPOOF label (pre-classification-engine). */
+        val spoofLogs: Int,
+        /** Legacy alias for authorisedLogs. */
+        val verifiedLogs: Int
     )
 
     companion object {
