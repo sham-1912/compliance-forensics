@@ -75,8 +75,77 @@ needing `navigation.reset()` calls scattered through screen code.
 - [x] Every button has visible pressed/disabled/loading states (`Button.tsx`)
 - [x] OTP screen handles Android hardware back button correctly (native stack default pop behavior; no override needed since OTP isn't the reset point — dashboard is)
 
+---
+
+## Phase 2 summary — Home Dashboard
+
+**Status: complete.** `PlaceholderHomeScreen.tsx` is deleted, per its own
+comment — `HomeDashboardScreen` now mounts directly wherever it stood.
+
+**Components added (`/components`):** `StatCard`, `ProtectionStatusCard`,
+`IncomingCallCard`, `QuickVerifyBar`, `ActivityListItem`,
+`ActivityEmptyState`, `QuickActionTile`, `BottomNavBar`,
+`DashboardSkeleton` — the full Phase 2 inventory from spec Section 5.
+All pull exclusively from `/theme` tokens established in Phase 1; no new
+colors, spacing, or radii were introduced.
+
+**Screens built:** `HomeDashboardScreen` — the single Phase 2 screen,
+composing all 8 sections (App Bar, Protection Status, Incoming Call,
+Quick Verify, Today's Statistics, Recent Activity, Quick Actions, Bottom
+Nav) under a sticky app bar whose elevation appears only once content
+scrolls beneath it (tracked via `onScroll` + a `scrolled` boolean, no
+extra library).
+
+**Mock data added:** `mockDashboard.ts` — today's stats (4, each with a
+distinct trend direction and a **per-metric** trend variant, not a blind
+"up = green" rule), 5 recent-activity entries deliberately covering all
+4 `StatusChip` variants (success/warning/error/neutral), and one
+incoming-caller demo object.
+
+**Decisions made where the spec left a choice open:**
+- **Bottom Nav is presentational only, not yet a real tab navigator.**
+  Phase 2 is explicitly a single screen, and Home is the only functional
+  tab per spec item 8. Rather than standing up a `createBottomTabNavigator`
+  with empty stub screens for Verify/Reports/Settings (screens that don't
+  exist until Phases 3–5), `BottomNavBar` is a custom-built, fully
+  presentational component: Home is permanently marked active, and
+  pressing any other tab fires a "coming soon" Snackbar without
+  navigating. **This means a real bottom-tab `MainTabs` navigator still
+  needs to be introduced in Phase 3**, once `VerifyNumber` exists as a
+  genuine destination — `RootNavigator` will swap from mounting
+  `HomeDashboardScreen` directly to mounting a tab navigator at that
+  point. Flagged here so it isn't missed.
+- **TopAppBar's trailing slot is a fixed 32px width** (sized to balance
+  the leading back-button slot for title centering on auth screens).
+  Section 6's spec asks the dashboard header for a logo mark, greeting,
+  bell, *and* avatar — more than that slot can hold without overflowing.
+  Rather than modifying the shared `TopAppBar` contract (forbidden after
+  Phase 1), the app bar carries a short "CFE" wordmark as its `title` and
+  the notification bell (with unread badge) as `trailing`; the
+  time-of-day greeting and the initials avatar moved into the first
+  scrollable section instead, directly under the sticky bar.
+- **Recent Activity's empty state** is reachable via a small "Preview
+  empty (demo)" text toggle next to "See All", mirroring the demo-toggle
+  pattern already used on `ProtectionStatusCard` and `IncomingCallCard`,
+  so all three togglable states in this phase follow one consistent
+  interaction convention.
+- **Quick Verify's mock result** is derived deterministically from the
+  last digit of the entered number (cycling Verified / No Consent Found
+  / Unverified) rather than randomly, so the same input always
+  reproduces the same demo outcome.
+
+## Acceptance criteria check (Phase 2, per spec)
+
+- [x] Every card/list has realistic, non-lorem-ipsum content (`mockDashboard.ts`)
+- [x] Protection Status Card demonstrably supports both Active (success) and Paused (warning) states via its demo toggle
+- [x] Incoming Call Card demonstrably supports both idle and incoming-call states via its demo toggle
+- [x] Skeleton (`DashboardSkeleton`) shown ~800ms on mount before content fades in
+- [x] Pull-to-refresh implemented via `RefreshControl` (mock ~900ms spinner, re-renders same data)
+
 ## Next up
 
-Phase 2 — Home Dashboard + Bottom Nav, replacing `PlaceholderHomeScreen`
-with the real 8-section dashboard and introducing the Bottom Tab
-navigator that Phases 3–5 hang off of.
+Phase 3 — Verification module (Verify Number, Verification Result,
+Incoming Call Overlay), wired from Home's Quick Verify and Quick
+Actions. This is also where `BottomNavBar` gains a real destination for
+its "Verify" tab and the `MainTabs` navigator decision above gets
+resolved.

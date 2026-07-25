@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { StyleSheet, TextInput, View, TouchableWithoutFeedback } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -41,39 +41,37 @@ export function OTPInput({ value, onChange, error = false, triggerShake }: OTPIn
   const digits = Array.from({ length: OTP_LENGTH }, (_, i) => value[i] ?? '');
 
   return (
-    <TouchableWithoutFeedback onPress={() => hiddenInputRef.current?.focus()}>
-      <Animated.View style={[styles.row, animatedStyle]}>
-        {digits.map((digit, index) => {
-          const isActive = value.length === index;
-          return (
-            <View
-              key={index}
-              style={[
-                styles.box,
-                {
-                  borderColor: error ? colors.error : isActive ? colors.primary : colors.border,
-                  backgroundColor: colors.surface,
-                },
-              ]}
-            >
-              <Animated.Text style={[typography.codeMono, styles.digit]}>{digit}</Animated.Text>
-            </View>
-          );
-        })}
-        {/* Single hidden input drives all 6 boxes so auto-advance / backspace
-            work natively without manual focus juggling between 6 TextInputs. */}
-        <TextInput
-          ref={hiddenInputRef}
-          value={value}
-          onChangeText={(text) => onChange(text.replace(/[^0-9]/g, '').slice(0, OTP_LENGTH))}
-          keyboardType="number-pad"
-          maxLength={OTP_LENGTH}
-          style={styles.hiddenInput}
-          autoFocus
-          accessibilityLabel="One-time passcode"
-        />
-      </Animated.View>
-    </TouchableWithoutFeedback>
+    <Animated.View style={[styles.row, animatedStyle]}>
+      {digits.map((digit, index) => {
+        const isActive = value.length === index;
+        return (
+          <View
+            key={index}
+            style={[
+              styles.box,
+              {
+                borderColor: error ? colors.error : isActive ? colors.primary : colors.border,
+                backgroundColor: colors.surface,
+              },
+            ]}
+          >
+            <Animated.Text style={[typography.codeMono, styles.digit]}>{digit}</Animated.Text>
+          </View>
+        );
+      })}
+      {/* Single hidden input drives all 6 boxes so auto-advance / backspace
+          work natively without manual focus juggling between 6 TextInputs. */}
+      <TextInput
+        ref={hiddenInputRef}
+        value={value}
+        onChangeText={(text) => onChange(text.replace(/[^0-9]/g, '').slice(0, OTP_LENGTH))}
+        keyboardType="number-pad"
+        maxLength={OTP_LENGTH}
+        style={styles.hiddenInput}
+        autoFocus
+        accessibilityLabel="One-time passcode"
+      />
+    </Animated.View>
   );
 }
 
@@ -88,10 +86,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   digit: { color: colors.textPrimary, fontSize: 20 },
-  hiddenInput: {
-    position: 'absolute',
-    width: 1,
-    height: 1,
-    opacity: 0.01,
-  },
+  hiddenInput: { position: 'absolute', opacity: 0, height: 0, width: 0 },
 });
