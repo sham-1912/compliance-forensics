@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark Theme Palette -->
+    <color name="background_dark">#0B1120</color>
+    <color name="surface_card">#131B2E</color>
+    <color name="accent_teal">#1D9E75</color>
+    <color name="accent_amber">#EF9F27</color>
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#9CA3AF</color>
+    <color name="status_success">#5DCAA5</color>
+    <color name="status_danger">#E24B4A</color>
+
+    <!-- Legacy / Standard Palette -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>
