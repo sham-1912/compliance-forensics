@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_dark"
+    android:padding="24dp">
+
+    <!-- Protection Toggle -->
+    <TextView
+        android:id="@+id/tvProtectionLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Call Protection"
+        android:textColor="@color/text_primary"
+        android:textSize="16sp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/switchProtection"
+        app:layout_constraintBottom_toBottomOf="@id/switchProtection" />
+
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/switchProtection"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Quick Verify Section -->
+    <TextView
+        android:id="@+id/tvQuickVerifyLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="Quick Verify"
+        android:textColor="@color/text_secondary"
+        android:textAllCaps="true"
+        android:textSize="12sp"
+        app:layout_constraintTop_toBottomOf="@id/switchProtection"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilQuickVerify"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:hint="Enter phone number"
+        app:boxStrokeColor="@color/accent_teal"
+        app:hintTextColor="@color/text_secondary"
+        app:layout_constraintTop_toBottomOf="@id/tvQuickVerifyLabel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etQuickVerify"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="phone"
+            android:textColor="@color/text_primary" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnRunManualCheck"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Verify Number"
+        android:backgroundTint="@color/accent_teal"
+        android:textColor="@color/text_primary"
+        app:layout_constraintTop_toBottomOf="@id/tilQuickVerify"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Simulate Call (Demo) -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSimulateCall"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Simulate Incoming Call (Demo)"
+        android:textColor="@color/accent_amber"
+        app:strokeColor="@color/accent_amber"
+        app:layout_constraintTop_toBottomOf="@id/btnRunManualCheck"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Manage Blocklist -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnManageBlocklist"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Manage Blocklist"
+        android:textColor="@color/text_secondary"
+        app:layout_constraintTop_toBottomOf="@id/btnSimulateCall"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Verification Result Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardResult"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="@color/surface_card"
+        app:cardCornerRadius="12dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/text_secondary"
+        app:layout_constraintTop_toBottomOf="@id/btnManageBlocklist"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/tvResultStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="15sp"
+                tools:text="✓ Verified — HDFC BANK LTD" />
+
+            <TextView
+                android:id="@+id/tvResultDetails"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                tools:text="Consent ID: HDFC-8932 · Source: LIVE_REGISTRY" />
+
+            <!-- Block this number button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBlockNumber"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Block this number"
+                android:textColor="@color/status_danger" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
