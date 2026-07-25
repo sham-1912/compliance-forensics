@@ -1,11 +1,11 @@
 package com.compliance.forensics.utils
 
 import android.Manifest
-import android.app.Activity
+import androidx.fragment.app.FragmentActivity
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
-import com.guolindev.permissionx.PermissionX
+import com.permissionx.guolindev.PermissionX
 
 object PermissionHelper {
 
@@ -23,7 +23,7 @@ object PermissionHelper {
     }
 
     fun requestPermissions(
-        activity: Activity,
+        activity: FragmentActivity,
         onGranted: () -> Unit,
         onDenied: (List<String>) -> Unit
     ) {
