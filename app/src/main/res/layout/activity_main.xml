@@ -1,65 +1,130 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:background="@color/background_dark"
+    android:padding="24dp">
 
     <TextView
-        android:id="@+id/tvTitle"
+        android:id="@+id/callCheckedLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Compliance Forensics Engine"
-        android:textSize="24sp"
-        android:textStyle="bold"
+        android:layout_marginTop="16dp"
+        android:text="@string/label_incoming_call_checked"
+        android:textColor="@color/text_secondary"
+        android:textAllCaps="true"
+        android:textSize="12sp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="32dp"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <TextView
-        android:id="@+id/tvStatus"
+        android:id="@+id/callerNumberText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="⏳ Starting service..."
-        android:textSize="18sp"
-        android:textColor="@android:color/holo_orange_dark"
-        app:layout_constraintTop_toBottomOf="@id/tvTitle"
+        android:layout_marginTop="12dp"
+        android:textColor="@color/text_primary"
+        android:textSize="26sp"
+        app:layout_constraintTop_toBottomOf="@id/callCheckedLabel"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="24dp"/>
+        tools:text="+91 98765 43210" />
 
-    <Button
+    <TextView
+        android:id="@+id/claimingEntityText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        app:layout_constraintTop_toBottomOf="@id/callerNumberText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="Claiming: HDFC BANK LTD" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/verificationCard"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        app:cardBackgroundColor="@color/surface_card"
+        app:cardCornerRadius="12dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/status_success"
+        app:layout_constraintTop_toBottomOf="@id/claimingEntityText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/verificationStatusText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/status_success"
+                android:textSize="15sp"
+                android:text="@string/status_checking" />
+
+            <TextView
+                android:id="@+id/consentIdText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:visibility="gone"
+                tools:text="Valid consent ID: HDFC-8932"
+                tools:visibility="visible" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <ImageButton
+        android:id="@+id/declineCallButton"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_marginTop="48dp"
+        android:background="@drawable/bg_call_action_decline"
+        android:src="@drawable/ic_call_decline"
+        android:contentDescription="@string/cd_decline_call"
+        app:layout_constraintTop_toBottomOf="@id/verificationCard"
+        app:layout_constraintEnd_toStartOf="@id/acceptCallButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintHorizontal_bias="0.5" />
+
+    <ImageButton
+        android:id="@+id/acceptCallButton"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_marginStart="48dp"
+        android:layout_marginTop="48dp"
+        android:background="@drawable/bg_call_action_accept"
+        android:src="@drawable/ic_call_accept"
+        android:contentDescription="@string/cd_accept_call"
+        app:layout_constraintTop_toBottomOf="@id/verificationCard"
+        app:layout_constraintStart_toEndOf="@id/declineCallButton"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnViewLogs"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
         android:text="View Audit Logs"
-        android:textSize="16sp"
-        app:layout_constraintTop_toBottomOf="@id/tvStatus"
+        android:textColor="@color/text_secondary"
+        app:strokeColor="@color/text_secondary"
+        app:layout_constraintTop_toBottomOf="@id/declineCallButton"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="32dp"/>
-
-    <Button
-        android:id="@+id/btnExportAll"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Export All Logs"
-        android:textSize="16sp"
-        android:layout_marginTop="12dp"
-        app:layout_constraintTop_toBottomOf="@id/btnViewLogs"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-    <Button
-        android:id="@+id/btnClearLogs"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Clear Old Logs"
-        android:textSize="16sp"
-        android:layout_marginTop="12dp"
-        app:layout_constraintTop_toBottomOf="@id/btnExportAll"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

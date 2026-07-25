@@ -1,3 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Compliance Forensics Engine</string>
+    <string name="label_incoming_call_checked">Incoming call checked</string>
+    <string name="label_claiming">Claiming: %1$s</string>
+    <string name="status_idle">Waiting for a call…</string>
+    <string name="status_checking">Checking consent registry…</string>
+    <string name="status_verified">Consent verified</string>
+    <string name="status_unverified">Not verified — proceed with caution</string>
+    <string name="label_consent_id">Valid consent ID: %1$s</string>
+    <string name="cd_decline_call">Decline call</string>
+    <string name="cd_accept_call">Accept call</string>
 </resources>
