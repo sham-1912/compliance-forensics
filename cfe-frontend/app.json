@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "Compliance Forensics Engine",
+    "slug": "compliance-forensics-engine",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "platforms": ["android"],
+    "android": {
+      "package": "com.novaris.complianceforensics.app"
+    },
+    "assetBundlePatterns": ["**/*"]
+  }
+}
