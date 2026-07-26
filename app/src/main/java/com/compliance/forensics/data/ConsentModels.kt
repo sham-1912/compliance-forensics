@@ -24,7 +24,10 @@ data class VerificationResult(
     val claimingEntity: String?,
     val consentId: String?,
     val isVerified: Boolean,
-    val source: VerificationSource
+    val source: VerificationSource,
+    val classificationResult: String = "UNVERIFIED",
+    val lsa: String = "UNKNOWN",
+    val operatorName: String = "UNKNOWN"
 )
 
 enum class VerificationSource {
