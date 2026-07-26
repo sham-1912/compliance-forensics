@@ -1,4 +1,4 @@
-package com.novaris.complianceforensics
+package com.compliance.forensics
 
 import android.Manifest
 import android.content.Context

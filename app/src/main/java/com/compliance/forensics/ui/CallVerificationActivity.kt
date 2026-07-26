@@ -1,4 +1,4 @@
-package com.novaris.complianceforensics
+package com.compliance.forensics.ui
 
 import android.os.Bundle
 import android.widget.Toast
@@ -6,6 +6,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.compliance.forensics.databinding.ActivityMainBinding
 import com.compliance.forensics.R
+import com.compliance.forensics.CallPermissionManager
+import com.compliance.forensics.VerificationResultBus
+import com.compliance.forensics.VerificationUiState
 
 /**
  * Owner: Person 1 (Team Lead / UI Developer)
@@ -19,7 +22,7 @@ import com.compliance.forensics.R
  * Person 2's module - included here since CallReceiver can't do
  * anything without it being granted first.
  */
-class MainActivity : AppCompatActivity() {
+class CallVerificationActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var permissionManager: CallPermissionManager
@@ -54,7 +57,7 @@ class MainActivity : AppCompatActivity() {
             // TODO(Person 1): answer via TelecomManager, then reset to Idle.
         }
         binding.btnViewLogs.setOnClickListener {
-            startActivity(android.content.Intent(this, com.compliance.forensics.ui.LogsActivity::class.java))
+            startActivity(android.content.Intent(this, LogsActivity::class.java))
         }
     }
 

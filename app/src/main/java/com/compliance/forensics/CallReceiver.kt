@@ -1,4 +1,4 @@
-package com.novaris.complianceforensics
+package com.compliance.forensics
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -9,7 +9,9 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import com.novaris.complianceforensics.data.ConsentRepository
+import com.compliance.forensics.data.ConsentRepository
+import com.compliance.forensics.data.VerificationResult
+import com.compliance.forensics.data.VerificationSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -48,12 +50,12 @@ class CallReceiver : BroadcastReceiver() {
 
         // Post the checking state to update the UI while looking up consent
         VerificationResultBus.postResult(
-            com.novaris.complianceforensics.data.VerificationResult(
+            VerificationResult(
                 phoneNumber = incomingNumber,
                 claimingEntity = null,
                 consentId = null,
                 isVerified = false,
-                source = com.novaris.complianceforensics.data.VerificationSource.CHECKING
+                source = VerificationSource.CHECKING
             )
         )
 
@@ -79,7 +81,7 @@ class CallReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun showHeadsUpNotification(context: Context, result: com.novaris.complianceforensics.data.VerificationResult) {
+    private fun showHeadsUpNotification(context: Context, result: VerificationResult) {
         val channelId = "cfe_call_verification"
         val channelName = "Call Verification Notifications"
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

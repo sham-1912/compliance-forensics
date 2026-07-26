@@ -1,9 +1,9 @@
-package com.novaris.complianceforensics
+package com.compliance.forensics
 
 import android.content.Context
 import com.compliance.forensics.data.database.AuditLogEntity
 import com.compliance.forensics.data.repository.AuditRepository
-import com.novaris.complianceforensics.data.VerificationResult
+import com.compliance.forensics.data.VerificationResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

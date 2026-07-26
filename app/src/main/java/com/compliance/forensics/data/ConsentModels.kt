@@ -1,4 +1,4 @@
-package com.novaris.complianceforensics.data
+package com.compliance.forensics.data
 
 /**
  * Owner: Person 3 (Database Developer)

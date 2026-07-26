@@ -28,7 +28,7 @@
 
         <!-- Real-Time Call Verification Screen (Launcher) -->
         <activity
-            android:name="com.novaris.complianceforensics.MainActivity"
+            android:name="com.compliance.forensics.ui.CallVerificationActivity"
             android:exported="true"
             android:theme="@style/Theme.ComplianceForensicsEngine">
             <intent-filter>
@@ -45,7 +45,7 @@
 
         <!-- Broadcast Receiver for Call Detection -->
         <receiver
-            android:name="com.novaris.complianceforensics.CallReceiver"
+            android:name="com.compliance.forensics.CallReceiver"
             android:exported="true"
             android:permission="android.permission.READ_PHONE_STATE">
             <intent-filter>

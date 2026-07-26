@@ -1,6 +1,7 @@
-package com.novaris.complianceforensics
+package com.compliance.forensics
 
-import com.novaris.complianceforensics.data.VerificationResult
+import com.compliance.forensics.data.VerificationResult
+import com.compliance.forensics.data.VerificationSource
 
 /**
  * Owner: Person 1 (Team Lead / UI Developer)
@@ -28,7 +29,7 @@ sealed class VerificationUiState {
 
     companion object {
         fun from(result: VerificationResult): VerificationUiState = when {
-            result.source == com.novaris.complianceforensics.data.VerificationSource.CHECKING ->
+            result.source == VerificationSource.CHECKING ->
                 Checking(result.phoneNumber)
             result.isVerified && result.claimingEntity != null && result.consentId != null ->
                 Verified(result.phoneNumber, result.claimingEntity, result.consentId)

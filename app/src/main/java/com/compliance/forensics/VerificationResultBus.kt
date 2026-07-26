@@ -1,8 +1,8 @@
-package com.novaris.complianceforensics
+package com.compliance.forensics
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.novaris.complianceforensics.data.VerificationResult
+import com.compliance.forensics.data.VerificationResult
 
 /**
  * Owner: Person 2 (Call Detection Developer)
