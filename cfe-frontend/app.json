@@ -9,8 +9,12 @@
       "android"
     ],
     "android": {
-      "package": "com.novaris.complianceforensics.app"
+      "package": "com.sham.complianceforensics",
+      "googleServicesFile": "./google-services.json"
     },
+    "plugins": [
+      "@react-native-firebase/app"
+    ],
     "assetBundlePatterns": [
       "**/*"
     ]

@@ -26,7 +26,7 @@ export function LoginScreen({ navigation }: Props) {
       <View style={styles.bottomSection}>
         <Button
           label="Continue with Phone"
-          onPress={() => navigation.navigate('EmailSignIn')}
+          onPress={() => navigation.navigate('PhoneSignIn')}
         />
         <Text style={[typography.bodySmall, styles.legal]}>
           By continuing, you agree to our{' '}

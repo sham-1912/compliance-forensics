@@ -11,6 +11,7 @@ import {
   OTP_RESEND_COOLDOWN_SECONDS,
   maskEmail,
 } from '@/mockData/mockOTP';
+import { getPendingConfirmation, clearPendingConfirmation } from '@/navigation/phoneAuthConfirmation';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'OtpVerification'>;
 
@@ -21,7 +22,7 @@ function maskPhone(phone: string): string {
 }
 
 export function OtpVerificationScreen({ navigation, route }: Props) {
-  const { email } = route.params;
+  const { mode, email, phone } = route.params;
   const { login } = useAuth();
 
   const [otp, setOtp] = useState('');
@@ -29,6 +30,7 @@ export function OtpVerificationScreen({ navigation, route }: Props) {
   const [verified, setVerified] = useState(false);
   const [shakeTrigger, setShakeTrigger] = useState(0);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('Incorrect code — please try again');
   const [cooldown, setCooldown] = useState(OTP_RESEND_COOLDOWN_SECONDS);
 
   useEffect(() => {
@@ -40,35 +42,82 @@ export function OtpVerificationScreen({ navigation, route }: Props) {
   function handleResend() {
     if (cooldown > 0) return;
     setCooldown(OTP_RESEND_COOLDOWN_SECONDS);
-    // Simulated resend — no real OTP dispatch.
   }
 
   function handleVerify() {
     if (otp.length !== 6) return;
+    if (mode === 'phone') {
+      handleVerifyPhone();
+    } else {
+      handleVerifyEmailMock();
+    }
+  }
+
+  async function handleVerifyPhone() {
     setVerifying(true);
-    // Simulated Firebase Phone Auth credential check.
-    // Fixed test number +91 9999900000 requires 123456.
+    
+    // Offline bypass for hackathon presentation mock number
+    const normalizedPhone = (phone || '').replace(/\D/g, '');
+    if (normalizedPhone.slice(-10) === '9999900000') {
+      setTimeout(() => {
+        setVerifying(false);
+        if (otp === '123456') {
+          setVerified(true);
+          setTimeout(() => login(), 600);
+        } else {
+          setShakeTrigger((n) => n + 1);
+          setSnackbarMessage('Incorrect code — please try again');
+          setSnackbarVisible(true);
+          setOtp('');
+        }
+      }, 1000);
+      return;
+    }
+
+    const confirmation = getPendingConfirmation();
+    if (!confirmation) {
+      setVerifying(false);
+      setSnackbarMessage('Session expired — go back and resend the code.');
+      setSnackbarVisible(true);
+      return;
+    }
+
+    try {
+      await confirmation.confirm(otp);
+      clearPendingConfirmation();
+      setVerifying(false);
+      setVerified(true);
+      setTimeout(() => login(), 600);
+    } catch (err: any) {
+      setVerifying(false);
+      setShakeTrigger((n) => n + 1);
+      setSnackbarMessage(err?.message ?? 'Incorrect code — please try again');
+      setSnackbarVisible(true);
+      setOtp('');
+    }
+  }
+
+  function handleVerifyEmailMock() {
+    setVerifying(true);
     setTimeout(() => {
       setVerifying(false);
-      
-      const cleanPhone = email.replace(/\D/g, '');
-      const isDemoNumber = cleanPhone === '9999900000';
-      const isCorrectOtp = isDemoNumber ? (otp === '123456') : (otp !== MOCK_INCORRECT_OTP_DEMO);
-
-      if (!isCorrectOtp) {
+      if (otp === MOCK_INCORRECT_OTP_DEMO) {
         setShakeTrigger((n) => n + 1);
+        setSnackbarMessage('Incorrect code — please try again');
         setSnackbarVisible(true);
         setOtp('');
         return;
       }
       setVerified(true);
       setTimeout(() => {
-        // Reset the nav stack — user should not be able to back-navigate
-        // into the auth flow after this point.
         login();
       }, 600);
     }, 1200);
   }
+
+  const helperText = mode === 'phone'
+    ? `Code sent to ${phone ? maskPhone(phone) : ''}`
+    : `Code sent to ${maskEmail(email ?? '')}`;
 
   return (
     <View style={styles.container}>
@@ -81,9 +130,7 @@ export function OtpVerificationScreen({ navigation, route }: Props) {
           </View>
         ) : (
           <>
-            <Text style={[typography.bodyMedium, styles.helper]}>
-              Code sent to {maskPhone(email)}
-            </Text>
+            <Text style={[typography.bodyMedium, styles.helper]}>{helperText}</Text>
             <OTPInput value={otp} onChange={setOtp} triggerShake={shakeTrigger} />
 
             <View style={styles.resendRow}>
@@ -111,7 +158,7 @@ export function OtpVerificationScreen({ navigation, route }: Props) {
       </View>
 
       <Snackbar
-        message="Incorrect code — please try again"
+        message={snackbarMessage}
         variant="error"
         visible={snackbarVisible}
         onDismiss={() => setSnackbarVisible(false)}
@@ -123,9 +170,9 @@ export function OtpVerificationScreen({ navigation, route }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   body: { paddingHorizontal: layout.screenHorizontalPadding, paddingTop: spacing.lg },
-  helper: { color: colors.textSecondary, marginBottom: spacing.lg },
   resendRow: { alignItems: 'center', marginTop: spacing.lg },
   ctaSpacing: { marginTop: spacing.xl },
   successState: { alignItems: 'center', paddingTop: spacing.xxl },
   successText: { color: colors.textPrimary, marginTop: spacing.md },
+  helper: { color: colors.textSecondary, marginBottom: spacing.lg },
 });
