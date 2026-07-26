@@ -2,6 +2,7 @@
   "expo": {
     "name": "Compliance Forensics Engine",
     "slug": "compliance-forensics-engine",
+    "icon": "./assets/icon.png",
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
