@@ -4,11 +4,7 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@/theme/*": ["theme/*"],
-      "@/components/*": ["components/*"],
-      "@/screens/*": ["screens/*"],
-      "@/navigation/*": ["navigation/*"],
-      "@/mockData/*": ["mockData/*"]
+      "@/*": ["*"]
     }
   }
 }

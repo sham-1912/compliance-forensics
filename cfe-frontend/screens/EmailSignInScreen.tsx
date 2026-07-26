@@ -23,7 +23,7 @@ export function EmailSignInScreen({ navigation }: Props) {
     // Simulated async — no real network call.
     setTimeout(() => {
       setLoading(false);
-      navigation.navigate('OtpVerification', { email: phone });
+      navigation.navigate('OtpVerification', { mode: 'email', email: phone });
     }, 1200);
   }
 

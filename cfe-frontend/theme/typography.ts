@@ -17,6 +17,7 @@ type Scale = Record<
   | 'headlineMedium'
   | 'titleLarge'
   | 'titleMedium'
+  | 'titleSmall'
   | 'bodyLarge'
   | 'bodyMedium'
   | 'bodySmall'
@@ -61,6 +62,13 @@ export const typography: Scale = {
     fontSize: 16,
     fontWeight: '600',
     lineHeight: 24,
+    letterSpacing: 0.1,
+  },
+  titleSmall: {
+    fontFamily: systemFont,
+    fontSize: 14,
+    fontWeight: '600',
+    lineHeight: 20,
     letterSpacing: 0.1,
   },
   bodyLarge: {
