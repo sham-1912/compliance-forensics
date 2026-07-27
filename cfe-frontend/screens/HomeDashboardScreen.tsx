@@ -409,6 +409,7 @@ export function HomeDashboardScreen() {
         const perms: any[] = [
           PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE,
           PermissionsAndroid.PERMISSIONS.READ_CALL_LOG,
+          PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
         ];
         if (Platform.Version >= 33) {
           perms.push('android.permission.POST_NOTIFICATIONS');
