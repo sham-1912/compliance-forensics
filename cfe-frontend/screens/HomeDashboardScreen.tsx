@@ -347,9 +347,20 @@ export function HomeDashboardScreen() {
         return;
       }
       
-      // 3. Check local history logs
-      const hasHistory = dbLogs.some(log => log.subtitle.replace(/\D/g, '').slice(-10) === digits && log.classificationResult === 'KNOWN');
-      if (hasHistory || digits === '9876543210') {
+      // 3. Check device call log via native bridge
+      let isKnown = false;
+      if (Platform.OS === 'android' && NativeModules.AuditBridgeModule && typeof NativeModules.AuditBridgeModule.isInCallLog === 'function') {
+        try {
+          isKnown = await NativeModules.AuditBridgeModule.isInCallLog(digits);
+        } catch (e) {
+          // fallback: check dbLogs
+          isKnown = dbLogs.some(log => log.subtitle.replace(/\D/g, '').slice(-10) === digits);
+        }
+      } else {
+        isKnown = dbLogs.some(log => log.subtitle.replace(/\D/g, '').slice(-10) === digits);
+      }
+
+      if (isKnown || digits === '9876543210') {
         setSearchResult({
           number: `+91 ${digits.slice(0, 5)} ${digits.slice(5)}`,
           category: "Known Contact",
@@ -359,6 +370,7 @@ export function HomeDashboardScreen() {
         });
         return;
       }
+
       
       // 4. Default Unverified
       setSearchResult({
@@ -394,10 +406,14 @@ export function HomeDashboardScreen() {
   const requestPermissions = async () => {
     if (Platform.OS === 'android') {
       try {
-        await PermissionsAndroid.requestMultiple([
+        const perms: any[] = [
           PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE,
           PermissionsAndroid.PERMISSIONS.READ_CALL_LOG,
-        ]);
+        ];
+        if (Platform.Version >= 33) {
+          perms.push('android.permission.POST_NOTIFICATIONS');
+        }
+        await PermissionsAndroid.requestMultiple(perms);
         loadDbData();
       } catch (err) {
         console.warn(err);
@@ -1190,7 +1206,7 @@ export function HomeDashboardScreen() {
                 <Text style={[typography.labelMedium, { color: colors.primary }]}>Close</Text>
               </Pressable>
             </View>
-            <View style={styles.modalBody}>
+            <ScrollView style={{ flexGrow: 0 }} contentContainerStyle={styles.modalBody} showsVerticalScrollIndicator={true}>
               <View style={styles.modalRow}>
                 <Text style={[typography.bodySmall, styles.modalLabel]}>Caller Phone Number</Text>
                 <Text style={[typography.bodyMedium, styles.modalValue]}>{selectedLog.subtitle}</Text>
@@ -1254,14 +1270,14 @@ export function HomeDashboardScreen() {
                 </View>
               </View>
 
-              <View style={{ marginTop: spacing.md }}>
+              <View style={{ marginTop: spacing.md, paddingBottom: spacing.md }}>
                 <Button
                   label={isCurrentlyBlocked ? "Unblock Number" : "Block Number"}
                   onPress={handleToggleBlockSelectedNumber}
                   variant={isCurrentlyBlocked ? "secondary" : "destructive"}
                 />
               </View>
-            </View>
+            </ScrollView>
           </View>
         </View>
       )}

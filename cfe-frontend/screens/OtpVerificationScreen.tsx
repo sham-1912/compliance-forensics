@@ -55,24 +55,28 @@ export function OtpVerificationScreen({ navigation, route }: Props) {
 
   async function handleVerifyPhone() {
     setVerifying(true);
-    
-    // Offline bypass for hackathon presentation mock number
-    const normalizedPhone = (phone || '').replace(/\D/g, '');
-    if (normalizedPhone.slice(-10) === '9999900000') {
-      setTimeout(() => {
-        setVerifying(false);
-        if (otp === '123456') {
-          setVerified(true);
-          setTimeout(() => login(), 600);
-        } else {
-          setShakeTrigger((n) => n + 1);
-          setSnackbarMessage('Incorrect code — please try again');
-          setSnackbarVisible(true);
-          setOtp('');
-        }
-      }, 1000);
-      return;
-    }
+        // Offline bypass for hackathon presentation mock number
+      const normalizedPhone = (phone || '').replace(/\D/g, '');
+      if (normalizedPhone.slice(-10) === '9999900000') {
+        setTimeout(async () => {
+          setVerifying(false);
+          if (otp === '123456') {
+            setVerified(true);
+            // Create a Firebase anonymous session so auth persists across restarts
+            try {
+              const firebaseAuth = require('@react-native-firebase/auth').default;
+              await firebaseAuth().signInAnonymously();
+            } catch (_) {}
+            setTimeout(() => login(), 600);
+          } else {
+            setShakeTrigger((n) => n + 1);
+            setSnackbarMessage('Incorrect code — please try again');
+            setSnackbarVisible(true);
+            setOtp('');
+          }
+        }, 1000);
+        return;
+      }
 
     const confirmation = getPendingConfirmation();
     if (!confirmation) {
@@ -99,7 +103,7 @@ export function OtpVerificationScreen({ navigation, route }: Props) {
 
   function handleVerifyEmailMock() {
     setVerifying(true);
-    setTimeout(() => {
+    setTimeout(async () => {
       setVerifying(false);
       if (otp === MOCK_INCORRECT_OTP_DEMO) {
         setShakeTrigger((n) => n + 1);
@@ -109,6 +113,11 @@ export function OtpVerificationScreen({ navigation, route }: Props) {
         return;
       }
       setVerified(true);
+      // Create a Firebase anonymous session so auth persists across restarts
+      try {
+        const firebaseAuth = require('@react-native-firebase/auth').default;
+        await firebaseAuth().signInAnonymously();
+      } catch (_) {}
       setTimeout(() => {
         login();
       }, 600);

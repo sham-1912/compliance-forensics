@@ -1,14 +1,12 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
-import { AppState, AppStateStatus } from 'react-native';
+import auth from '@react-native-firebase/auth';
 
-// UI-only auth state. There is no real session/token here — this exists
-// purely to drive which navigator (Auth vs Main) is mounted, which is
-// what produces the "reset, not push" behavior the spec requires:
-// swapping the root navigator unmounts the auth stack entirely, so
-// there's nothing to back-navigate into.
+// Auth state driven by Firebase Auth — sessions persist automatically
+// across app restarts and backgrounding. No manual token storage needed.
 
 interface AuthContextValue {
   isAuthenticated: boolean;
+  loading: boolean;
   login: () => void;
   logout: () => void;
 }
@@ -17,25 +15,29 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
-      if (nextAppState === 'background') {
-        setIsAuthenticated(false);
-      }
+    // Firebase Auth automatically restores the session on app launch.
+    // onAuthStateChanged fires once immediately with the current user (or null).
+    const unsubscribe = auth().onAuthStateChanged(user => {
+      setIsAuthenticated(!!user);
+      setLoading(false);
     });
-    return () => {
-      subscription.remove();
-    };
+    return unsubscribe;
   }, []);
 
   const value = useMemo(
     () => ({
       isAuthenticated,
+      loading,
       login: () => setIsAuthenticated(true),
-      logout: () => setIsAuthenticated(false),
+      logout: () => {
+        auth().signOut().catch(() => {});
+        setIsAuthenticated(false);
+      },
     }),
-    [isAuthenticated]
+    [isAuthenticated, loading]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
