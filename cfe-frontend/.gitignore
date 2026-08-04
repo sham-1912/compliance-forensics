@@ -8,6 +8,12 @@ yarn-error.log*
 # Expo local config
 web-build/
 
-# Native directories (can be generated using expo prebuild)
-android/
-ios/
+# Android build artifacts (keep android source code committed)
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/.cxx/
+android/.idea/
+*.apk
+*.aab

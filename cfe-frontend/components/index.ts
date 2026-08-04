@@ -27,3 +27,8 @@ export { QuickActionTile } from './QuickActionTile';
 export { BottomNavBar } from './BottomNavBar';
 export type { NavTab } from './BottomNavBar';
 export { DashboardSkeleton } from './DashboardSkeleton';
+
+// Profile & Settings Components
+export { ProfileView } from './ProfileView';
+export { SettingsView } from './SettingsView';
+

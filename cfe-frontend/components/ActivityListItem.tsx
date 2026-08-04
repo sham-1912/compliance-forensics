@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, radius, spacing, typography } from '@/theme';
+import { radius, spacing } from '@/theme';
+import { useAppearance } from '@/theme/AppearanceContext';
 import { StatusChip, StatusChipVariant } from './StatusChip';
 
 interface ActivityListItemProps {
@@ -22,6 +23,8 @@ export function ActivityListItem({
   statusVariant,
   onPress,
 }: ActivityListItemProps) {
+  const { activeColors, scaledTypography } = useAppearance();
+
   return (
     <Pressable
       onPress={onPress}
@@ -29,12 +32,12 @@ export function ActivityListItem({
       accessibilityLabel={`${title}, ${statusLabel}`}
       style={({ pressed }) => [styles.row, pressed && onPress && styles.pressed]}
     >
-      <View style={styles.iconWrap}>{icon}</View>
+      <View style={[styles.iconWrap, { backgroundColor: activeColors.codeBackground }]}>{icon}</View>
       <View style={styles.textCol}>
-        <Text style={[typography.bodyMedium, { color: colors.textPrimary }]} numberOfLines={1}>
+        <Text style={[scaledTypography.bodyMedium, { color: activeColors.textPrimary }]} numberOfLines={1}>
           {title}
         </Text>
-        <Text style={[typography.bodySmall, { color: colors.textSecondary }]} numberOfLines={1}>
+        <Text style={[scaledTypography.bodySmall, { color: activeColors.textSecondary }]} numberOfLines={1}>
           {subtitle} · {timestamp}
         </Text>
       </View>
@@ -54,7 +57,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: radius.full,
-    backgroundColor: colors.codeBackground,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.sm,

@@ -3,11 +3,14 @@ import {
   ActivityIndicator,
   GestureResponderEvent,
   Pressable,
+  StyleProp,
   StyleSheet,
   Text,
   View,
+  ViewStyle,
 } from 'react-native';
-import { colors, radius, spacing, typography } from '@/theme';
+import { radius, spacing } from '@/theme';
+import { useAppearance } from '@/theme/AppearanceContext';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'destructive';
 
@@ -19,22 +22,8 @@ interface ButtonProps {
   loading?: boolean;
   fullWidth?: boolean;
   accessibilityLabel?: string;
+  style?: StyleProp<ViewStyle>;
 }
-
-const VARIANT_STYLES: Record<
-  ButtonVariant,
-  { bg: string; bgPressed: string; text: string; border?: string }
-> = {
-  primary: { bg: colors.primary, bgPressed: colors.primaryPressed, text: '#FFFFFF' },
-  secondary: {
-    bg: 'transparent',
-    bgPressed: colors.border,
-    text: colors.primary,
-    border: colors.primary,
-  },
-  tertiary: { bg: 'transparent', bgPressed: colors.border, text: colors.primary },
-  destructive: { bg: colors.error, bgPressed: '#B91C1C', text: '#FFFFFF' },
-};
 
 export function Button({
   label,
@@ -44,8 +33,26 @@ export function Button({
   loading = false,
   fullWidth = true,
   accessibilityLabel,
+  style,
 }: ButtonProps) {
-  const v = VARIANT_STYLES[variant];
+  const { activeColors, scaledTypography } = useAppearance();
+
+  const variantStyles: Record<
+    ButtonVariant,
+    { bg: string; bgPressed: string; text: string; border?: string }
+  > = {
+    primary: { bg: activeColors.primary, bgPressed: activeColors.primaryPressed, text: '#FFFFFF' },
+    secondary: {
+      bg: 'transparent',
+      bgPressed: activeColors.border,
+      text: activeColors.primary,
+      border: activeColors.primary,
+    },
+    tertiary: { bg: 'transparent', bgPressed: activeColors.border, text: activeColors.primary },
+    destructive: { bg: activeColors.error, bgPressed: '#B91C1C', text: '#FFFFFF' },
+  };
+
+  const v = variantStyles[variant];
   const isInteractive = !disabled && !loading;
 
   return (
@@ -59,25 +66,26 @@ export function Button({
         styles.base,
         fullWidth && styles.fullWidth,
         {
-          backgroundColor: disabled ? colors.border : pressed ? v.bgPressed : v.bg,
+          backgroundColor: disabled ? activeColors.border : pressed ? v.bgPressed : v.bg,
           borderColor: v.border,
           borderWidth: v.border ? 1 : 0,
           opacity: disabled ? 0.6 : 1,
         },
+        style,
       ]}
     >
       <View style={styles.content}>
         {loading && (
           <ActivityIndicator
             size="small"
-            color={variant === 'secondary' || variant === 'tertiary' ? colors.primary : '#FFFFFF'}
+            color={variant === 'secondary' || variant === 'tertiary' ? activeColors.primary : '#FFFFFF'}
             style={styles.spinner}
           />
         )}
         <Text
           style={[
-            typography.labelLarge,
-            { color: disabled ? colors.textDisabled : v.text },
+            scaledTypography.labelLarge,
+            { color: disabled ? activeColors.textDisabled : v.text },
           ]}
         >
           {label}

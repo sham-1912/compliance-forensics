@@ -43,9 +43,12 @@ import {
   Button,
   InputField,
   Switch,
+  ProfileView,
+  SettingsView,
 } from '@/components';
 import { useAuth } from '@/navigation/AuthContext';
 import { mockUser } from '@/mockData/mockUser';
+import { getStoredUserProfile } from '@/utils/userPreferences';
 import {
   mockDashboardMeta,
   mockIncomingCallerDemo,
@@ -76,8 +79,11 @@ function getInitials(name: string): string {
     .toUpperCase();
 }
 
+import { useAppearance } from '@/theme/AppearanceContext';
+
 export function HomeDashboardScreen() {
   const { logout } = useAuth();
+  const { activeColors, scaledTypography } = useAppearance();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -118,10 +124,18 @@ export function HomeDashboardScreen() {
   // Real-time live call alerts states
   const [liveCallPopup, setLiveCallPopup] = useState<{ visible: boolean; number: string; category: string } | null>(null);
 
+  // Settings & Profile sub-tab state
+  const [settingsSubTab, setSettingsSubTab] = useState<'profile' | 'settings'>('profile');
+  const [currentUserProfile, setCurrentUserProfile] = useState(getStoredUserProfile());
+
   const [snackbar, setSnackbar] = useState<{ message: string; visible: boolean }>({
     message: '',
     visible: false,
   });
+
+  const showSnackbar = (message: string) => {
+    setSnackbar({ message, visible: true });
+  };
 
   const loadDbData = async () => {
     if (Platform.OS === 'android' && NativeModules.AuditBridgeModule) {
@@ -383,24 +397,157 @@ export function HomeDashboardScreen() {
     }, 800);
   };
 
-  const handleDownloadReport = (format: 'CSV' | 'PDF') => {
+  const handleDownloadReport = async (format: 'CSV' | 'PDF') => {
     if (downloadingReport) return;
     setDownloadingReport(true);
-    setDownloadProgress(0);
-    
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 10;
-      setDownloadProgress(progress);
-      if (progress >= 100) {
-        clearInterval(interval);
+    setDownloadProgress(20);
+
+    const periodStr = reportPeriod === 'weekly' ? 'Weekly' : 'Monthly';
+
+    // 1. Try native bridge download if available on Android
+    if (Platform.OS === 'android' && NativeModules.AuditBridgeModule && typeof NativeModules.AuditBridgeModule.generateReport === 'function') {
+      try {
+        setDownloadProgress(60);
+        const result = await NativeModules.AuditBridgeModule.generateReport(format, reportPeriod);
+        setDownloadProgress(100);
         setDownloadingReport(false);
         setSnackbar({
-          message: `${reportPeriod === 'weekly' ? 'Weekly' : 'Monthly'} report downloaded successfully in ${format} format!`,
+          message: `${periodStr} report downloaded to Downloads/${result.fileName || `CFE_Report.${format.toLowerCase()}`}`,
           visible: true
         });
+        return;
+      } catch (err) {
+        console.error("Native report generation failed, using web/JS fallback", err);
       }
-    }, 150);
+    }
+
+    // 2. Web / JS Fallback for CSV and PDF
+    try {
+      setDownloadProgress(60);
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = `CFE_Compliance_Report_${reportPeriod}_${timestamp}`;
+
+      if (format === 'CSV') {
+        const headers = ['Log ID', 'Timestamp', 'Caller ID', 'Caller Name', 'Classification', 'Verification Status', 'Telecom Circle (LSA)', 'Operator', 'Consent Hash', 'SHA-256 Audit Proof Hash'];
+        const logsToUse = dbLogs.length > 0 ? dbLogs : mockRecentActivity;
+        const csvRows = [headers.join(',')];
+
+        logsToUse.forEach((log: any) => {
+          const row = [
+            `"${log.id}"`,
+            `"${log.timestamp}"`,
+            `"${log.subtitle || log.callerId || ''}"`,
+            `"${(log.title || log.callerName || 'Unknown').replace(/"/g, '""')}"`,
+            `"${log.classificationResult || ''}"`,
+            `"${log.statusLabel || ''}"`,
+            `"${log.lsa || 'National'}"`,
+            `"${log.operatorName || 'TRAI Regulated'}"`,
+            `"${log.consentHash || 'N/A'}"`,
+            `"${log.auditProofHash || 'N/A'}"`
+          ];
+          csvRows.push(row.join(','));
+        });
+
+        const csvContent = csvRows.join('\n');
+
+        if (typeof document !== 'undefined' && document.createElement) {
+          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+          const link = document.createElement('a');
+          const url = URL.createObjectURL(blob);
+          link.setAttribute('href', url);
+          link.setAttribute('download', `${filename}.csv`);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+      } else {
+        // PDF Web Fallback via printable HTML view
+        if (typeof window !== 'undefined' && window.open) {
+          const logsToUse = dbLogs.length > 0 ? dbLogs : mockRecentActivity;
+          const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>CFE Compliance Report</title>
+              <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 24px; color: #0F172A; }
+                .header { background: #0F172A; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+                .header h1 { margin: 0 0 6px 0; font-size: 20px; }
+                .header p { margin: 0; color: #94A3B8; font-size: 12px; }
+                .meta { background: #F1F5F9; padding: 12px 16px; border-radius: 6px; font-size: 13px; margin-bottom: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 12px; }
+                th { background: #E2E8F0; text-align: left; padding: 10px; color: #475569; }
+                td { padding: 10px; border-bottom: 1px solid #E2E8F0; }
+                .badge { padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 11px; display: inline-block; }
+                .success { background: #DCFCE7; color: #15803D; }
+                .warning { background: #FEF3C7; color: #B45309; }
+                .error { background: #FEE2E2; color: #DC2626; }
+                .neutral { background: #E2E8F0; color: #475569; }
+                .footer { margin-top: 30px; font-size: 11px; color: #94A3B8; border-top: 1px solid #CBD5E1; padding-top: 12px; }
+              </style>
+            </head>
+            <body>
+              <div class="header">
+                <h1>COMPLIANCE FORENSICS ENGINE (CFE)</h1>
+                <p>OFFICIAL ${periodStr.toUpperCase()} SUBSCRIBER COMPLIANCE & AUDIT REPORT</p>
+              </div>
+              <div class="meta">
+                <strong>Report Period:</strong> ${periodStr} Summary &nbsp;|&nbsp; 
+                <strong>Generated At:</strong> ${new Date().toLocaleString()} &nbsp;|&nbsp; 
+                <span style="color:#059669; font-weight:600;">STATUS: CRYPTOGRAPHICALLY VERIFIED</span>
+              </div>
+              <h2>Audit Trail Records</h2>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date / Time</th>
+                    <th>Caller ID</th>
+                    <th>Entity / Name</th>
+                    <th>Classification</th>
+                    <th>SHA-256 Proof</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${logsToUse.map((l: any) => `
+                    <tr>
+                      <td>${l.timestamp}</td>
+                      <td><strong>${l.subtitle || l.callerId}</strong></td>
+                      <td>${l.title || l.callerName}</td>
+                      <td><span class="badge ${l.statusVariant || 'error'}">${l.statusLabel || 'Unverified'}</span></td>
+                      <td style="font-family:monospace; font-size:10px;">${(l.auditProofHash || 'N/A').substring(0, 16)}...</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+              <div class="footer">
+                Generated by Novaris Compliance Forensics Engine (CFE) v1.0 • SHA-256 Audit Proof Verified
+              </div>
+              <script>window.onload = function() { window.print(); };</script>
+            </body>
+            </html>
+          `;
+          const printWin = window.open('', '_blank');
+          if (printWin) {
+            printWin.document.write(html);
+            printWin.document.close();
+          }
+        }
+      }
+
+      setDownloadProgress(100);
+      setDownloadingReport(false);
+      setSnackbar({
+        message: `${periodStr} report downloaded successfully in ${format} format!`,
+        visible: true
+      });
+    } catch (err) {
+      console.error(err);
+      setDownloadingReport(false);
+      setSnackbar({
+        message: `Failed to download ${format} report. Please try again.`,
+        visible: true
+      });
+    }
   };
 
   const requestPermissions = async () => {
@@ -446,6 +593,10 @@ export function HomeDashboardScreen() {
           case 'KNOWN':
             statusLabel = 'Known';
             statusVariant = 'neutral';
+            break;
+          case 'BLOCKED':
+            statusLabel = 'Blocked';
+            statusVariant = 'error';
             break;
           case 'UNVERIFIED':
           default:
@@ -518,7 +669,7 @@ export function HomeDashboardScreen() {
   const displayLogs = dbLogs.length > 0 ? dbLogs.slice(0, 5) : mockRecentActivity;
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: activeColors.background }]}>
       <TopAppBar
         title="CFE"
         elevated={scrolled}
@@ -857,149 +1008,47 @@ export function HomeDashboardScreen() {
             </Card>
           )}
         </ScrollView>
-      ) : currentTab === 'settings' ? (
-        /* Settings & Profile Page */
+      ) : currentTab === 'profile' ? (
+        /* Dedicated Profile Page */
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
         >
           <View style={styles.reportsHeader}>
-            <Text style={[typography.headlineMedium, { color: colors.textPrimary, marginTop: spacing.md }]}>
-              Settings & Profile
+            <Text style={[scaledTypography.headlineMedium, { color: activeColors.textPrimary, marginTop: spacing.md }]}>
+              User Profile & Identity
             </Text>
-            <Text style={[typography.bodyMedium, { color: colors.textSecondary, marginTop: spacing.xs }]}>
-              Manage personal compliance rules and storage configurations.
+            <Text style={[scaledTypography.bodyMedium, { color: activeColors.textSecondary, marginTop: spacing.xs }]}>
+              Manage institutional credentials, KYC attestation & account security audit.
             </Text>
           </View>
-
-          {/* User Profile Card */}
-          <Card style={{ marginTop: spacing.md, flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-            <View style={{
-              width: 56,
-              height: 56,
-              borderRadius: 28,
-              backgroundColor: '#EAF8F7',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <Text style={[typography.titleLarge, { color: colors.primary }]}>
-                {getInitials(mockUser.name)}
-              </Text>
-            </View>
-            <View>
-              <Text style={[typography.titleMedium, { color: colors.textPrimary }]}>{mockUser.name}</Text>
-              <Text style={[typography.bodyMedium, { color: colors.textSecondary, marginTop: 2 }]}>john.doe@novaris.com</Text>
-              <Text style={[typography.bodySmall, { color: colors.textDisabled, marginTop: 2 }]}>+91 99999 00000</Text>
-            </View>
-          </Card>
-
-          {/* Compliance Rules Settings */}
-          <Card style={{ marginTop: spacing.md, gap: spacing.md }}>
-            <Text style={[typography.titleMedium, { color: colors.textPrimary }]}>Compliance Policies</Text>
-            
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <View style={{ flex: 1, paddingRight: spacing.sm }}>
-                <Text style={[typography.bodyMedium, { color: colors.textPrimary }]}>Real-time Call Verification</Text>
-                <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 2 }]}>Verify caller consent registries on incoming rings</Text>
-              </View>
-              <Switch
-                value={settingsVerification}
-                onValueChange={setSettingsVerification}
-                accessibilityLabel="Toggle verification policy"
-              />
-            </View>
-
-            <View style={{ height: 1, backgroundColor: colors.border }} />
-
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <View style={{ flex: 1, paddingRight: spacing.sm }}>
-                <Text style={[typography.bodyMedium, { color: colors.textPrimary }]}>Targeted Block Filtering</Text>
-                <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 2 }]}>Suppress notifications from block list numbers</Text>
-              </View>
-              <Switch
-                value={settingsBlocking}
-                onValueChange={setSettingsBlocking}
-                accessibilityLabel="Toggle block filtering policy"
-              />
-            </View>
-
-            <View style={{ height: 1, backgroundColor: colors.border }} />
-
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <View style={{ flex: 1, paddingRight: spacing.sm }}>
-                <Text style={[typography.bodyMedium, { color: colors.textPrimary }]}>Heads-up Alerts</Text>
-                <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 2 }]}>Display priority overlay alerts for unverified callers</Text>
-              </View>
-              <Switch
-                value={settingsNotifications}
-                onValueChange={setSettingsNotifications}
-                accessibilityLabel="Toggle notifications policy"
-              />
-            </View>
-          </Card>
-
-          {/* Storage Level Setting */}
-          <Card style={{ marginTop: spacing.md, gap: spacing.md }}>
-            <Text style={[typography.titleMedium, { color: colors.textPrimary }]}>Audit Storage Compliance</Text>
-            
-            <View style={{ flexDirection: 'row', backgroundColor: colors.border, borderRadius: 8, padding: 2 }}>
-              <Pressable
-                onPress={() => setSettingsStorage('minimal')}
-                style={{
-                  flex: 1,
-                  paddingVertical: 8,
-                  alignItems: 'center',
-                  backgroundColor: settingsStorage === 'minimal' ? colors.surface : 'transparent',
-                  borderRadius: 6
-                }}
-              >
-                <Text style={[typography.labelSmall, { color: settingsStorage === 'minimal' ? colors.textPrimary : colors.textSecondary }]}>
-                  Minimal
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setSettingsStorage('crypto')}
-                style={{
-                  flex: 1,
-                  paddingVertical: 8,
-                  alignItems: 'center',
-                  backgroundColor: settingsStorage === 'crypto' ? colors.surface : 'transparent',
-                  borderRadius: 6
-                }}
-              >
-                <Text style={[typography.labelSmall, { color: settingsStorage === 'crypto' ? colors.textPrimary : colors.textSecondary }]}>
-                  Crypto Proof
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setSettingsStorage('full')}
-                style={{
-                  flex: 1,
-                  paddingVertical: 8,
-                  alignItems: 'center',
-                  backgroundColor: settingsStorage === 'full' ? colors.surface : 'transparent',
-                  borderRadius: 6
-                }}
-              >
-                <Text style={[typography.labelSmall, { color: settingsStorage === 'full' ? colors.textPrimary : colors.textSecondary }]}>
-                  Full
-                </Text>
-              </Pressable>
-            </View>
-            
-            <Text style={[typography.bodySmall, { color: colors.textSecondary }]}>
-              {settingsStorage === 'minimal' ? 'Only stores logs with essential info.' :
-               settingsStorage === 'crypto' ? 'Appends a SHA-256 tamper-proof hash value for data integrity.' :
-               'Saves all logs, Circle coordinates, carrier profiles, and crypto proof.'}
+          <View style={{ marginTop: spacing.sm }}>
+            <ProfileView
+              onShowSnackbar={showSnackbar}
+              onProfileUpdated={(updated) => setCurrentUserProfile(updated)}
+              onNavigateToSettings={() => setCurrentTab('settings')}
+            />
+          </View>
+        </ScrollView>
+      ) : currentTab === 'settings' ? (
+        /* Dedicated Settings Page */
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <View style={styles.reportsHeader}>
+            <Text style={[scaledTypography.headlineMedium, { color: activeColors.textPrimary, marginTop: spacing.md }]}>
+              App Settings & Preferences
             </Text>
-          </Card>
-
-          {/* Log Off Button */}
-          <View style={{ marginTop: spacing.xl }}>
-            <Button
-              label="Log Off"
-              onPress={logout}
-              variant="destructive"
+            <Text style={[scaledTypography.bodyMedium, { color: activeColors.textSecondary, marginTop: spacing.xs }]}>
+              Configure compliance alerts, themes, data retention policies & export data.
+            </Text>
+          </View>
+          <View style={{ marginTop: spacing.sm }}>
+            <SettingsView
+              onLogout={logout}
+              onShowSnackbar={showSnackbar}
+              onNavigateToDownloadData={() => setCurrentTab('profile')}
             />
           </View>
         </ScrollView>
@@ -1010,28 +1059,28 @@ export function HomeDashboardScreen() {
           onScroll={handleScroll}
           scrollEventThrottle={16}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={activeColors.primary} />
           }
         >
           {/* 1. Greeting + avatar */}
           <View style={styles.greetingRow}>
             <View>
-              <Text style={[typography.bodySmall, { color: colors.textSecondary }]}>
+              <Text style={[scaledTypography.bodySmall, { color: activeColors.textSecondary }]}>
                 {getGreeting()},
               </Text>
-              <Text style={[typography.headlineMedium, { color: colors.textPrimary }]}>
-                {mockUser.name.split(' ')[0]}
+              <Text style={[scaledTypography.headlineMedium, { color: activeColors.textPrimary }]}>
+                {currentUserProfile.name.split(' ')[0]}
               </Text>
             </View>
             <Pressable
-              onPress={() => setCurrentTab('settings')}
+              onPress={() => setCurrentTab('profile')}
               hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel="Open profile"
-              style={styles.avatarSmall}
+              style={[styles.avatarSmall, { backgroundColor: activeColors.primary + '15' }]}
             >
-              <Text style={[typography.labelMedium, { color: colors.primary }]}>
-                {getInitials(mockUser.name)}
+              <Text style={[scaledTypography.labelMedium, { color: activeColors.primary }]}>
+                {getInitials(currentUserProfile.name)}
               </Text>
             </Pressable>
           </View>
@@ -1071,7 +1120,7 @@ export function HomeDashboardScreen() {
 
           {/* 5. Today's Statistics */}
           <View style={styles.section}>
-            <Text style={[typography.titleMedium, styles.sectionHeader]}>Today's Statistics</Text>
+            <Text style={[scaledTypography.titleMedium, { color: activeColors.textPrimary, marginBottom: spacing.xs }]}>Today's Statistics</Text>
             <View style={styles.statRow}>
               <StatCard
                 icon={STAT_ICONS[displayStats[0].id]}

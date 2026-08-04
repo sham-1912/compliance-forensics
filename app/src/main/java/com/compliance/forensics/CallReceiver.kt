@@ -61,8 +61,33 @@ class CallReceiver : BroadcastReceiver() {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val repository = ConsentRepository(appContext)
-                val result = repository.verifyCaller(incomingNumber)
+                val digits = incomingNumber.filter { it.isDigit() }
+                val normalized = if (digits.length == 12 && digits.startsWith("91")) digits.drop(2) else digits
+                val withCC = "+91$normalized"
+                val formattedCC = "+91 $normalized"
+
+                val db = com.compliance.forensics.data.database.AuditDatabase.getDatabase(appContext)
+                val isBlocked = db.blocklistDao().isBlocked(incomingNumber) ||
+                                db.blocklistDao().isBlocked(digits) ||
+                                db.blocklistDao().isBlocked(normalized) ||
+                                db.blocklistDao().isBlocked(withCC) ||
+                                db.blocklistDao().isBlocked(formattedCC)
+
+                val result = if (isBlocked) {
+                    VerificationResult(
+                        phoneNumber = incomingNumber,
+                        claimingEntity = "Blocked Caller",
+                        consentId = "USER-BLOCKED",
+                        isVerified = false,
+                        source = VerificationSource.LOCAL_CACHE,
+                        classificationResult = "BLOCKED",
+                        lsa = "National",
+                        operatorName = "User Blocklist"
+                    )
+                } else {
+                    val repository = ConsentRepository(appContext)
+                    repository.verifyCaller(incomingNumber)
+                }
 
                 // Person 4's module: tamper-proof hash + persistence
                 AuditLogger.init(appContext)
@@ -99,12 +124,17 @@ class CallReceiver : BroadcastReceiver() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        val emoji = if (result.isVerified) "🟢 Verified" else "🔴 No Consent Found"
+        val isBlocked = result.classificationResult == "BLOCKED"
+        val emoji = when {
+            isBlocked -> "🚫 Blocked Number"
+            result.isVerified -> "🟢 Verified"
+            else -> "🔴 No Consent Found"
+        }
         val title = "$emoji: ${result.phoneNumber}"
-        val text = if (result.isVerified) {
-            "Verified via TRAI Registry: ${result.claimingEntity ?: "Authorized Business"}"
-        } else {
-            "Warning: No verified consent found for this business"
+        val text = when {
+            isBlocked -> "This number is in your blocklist. Call suppressed."
+            result.isVerified -> "Verified via TRAI Registry: ${result.claimingEntity ?: "Authorized Business"}"
+            else -> "Warning: No verified consent found for this business"
         }
 
         val notification = NotificationCompat.Builder(context, channelId)

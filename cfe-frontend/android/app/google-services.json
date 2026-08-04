@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "582263346749",
+    "project_id": "shamcallers-4a9ae",
+    "storage_bucket": "shamcallers-4a9ae.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:582263346749:android:d8dee6c6eca3066b43fc54",
+        "android_client_info": {
+          "package_name": "com.sham.complianceforensics"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCa2ywoPkuxJQnzaVy7zQIdKuScRt1jdB0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

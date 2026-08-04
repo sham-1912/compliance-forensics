@@ -1,25 +1,29 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Pressable } from 'react-native';
+import { StyleSheet, Text, View, Pressable } from 'react-native';
 import { ChevronLeft } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, layout, spacing, typography } from '@/theme';
+import { layout, spacing } from '@/theme';
+import { useAppearance } from '@/theme/AppearanceContext';
 
 interface TopAppBarProps {
   title: string;
   onBack?: () => void;
   trailing?: React.ReactNode;
-  elevated?: boolean; // true once content has scrolled beneath it
+  elevated?: boolean;
 }
 
 export function TopAppBar({ title, onBack, trailing, elevated = false }: TopAppBarProps) {
   const insets = useSafeAreaInsets();
+  const { activeColors, scaledTypography } = useAppearance();
 
   return (
     <View
       style={[
         styles.bar,
-        { paddingTop: insets.top + spacing.xs },
+        {
+          backgroundColor: activeColors.background,
+          paddingTop: insets.top + spacing.xs
+        },
         elevated && styles.elevatedShadow,
       ]}
     >
@@ -31,11 +35,11 @@ export function TopAppBar({ title, onBack, trailing, elevated = false }: TopAppB
             accessibilityLabel="Go back"
             hitSlop={8}
           >
-            <ChevronLeft size={24} color={colors.textPrimary} />
+            <ChevronLeft size={24} color={activeColors.textPrimary} />
           </Pressable>
         )}
       </View>
-      <Text style={[typography.titleLarge, { color: colors.textPrimary }]} numberOfLines={1}>
+      <Text style={[scaledTypography.titleLarge, { color: activeColors.textPrimary }]} numberOfLines={1}>
         {title}
       </Text>
       <View style={[styles.slot, styles.trailingSlot]}>{trailing}</View>
@@ -45,7 +49,6 @@ export function TopAppBar({ title, onBack, trailing, elevated = false }: TopAppB
 
 const styles = StyleSheet.create({
   bar: {
-    backgroundColor: colors.background,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: layout.screenHorizontalPadding,

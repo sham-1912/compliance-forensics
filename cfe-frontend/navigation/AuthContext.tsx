@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
 import auth from '@react-native-firebase/auth';
+import { getAuthSession, setAuthSession } from '@/utils/userPreferences';
 
-// Auth state driven by Firebase Auth — sessions persist automatically
-// across app restarts and backgrounding. No manual token storage needed.
+// Auth state driven by persistent session management + Firebase Auth
+// Sessions persist reliably across app restarts, backgrounding, and home navigation.
 
 interface AuthContextValue {
   isAuthenticated: boolean;
@@ -14,16 +15,29 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => getAuthSession());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Firebase Auth automatically restores the session on app launch.
-    // onAuthStateChanged fires once immediately with the current user (or null).
+    // Initial check for active session or Firebase user
+    const isSessionActive = getAuthSession();
+    const currentUser = auth().currentUser;
+    if (currentUser || isSessionActive) {
+      setIsAuthenticated(true);
+    }
+    setLoading(false);
+
+    // Listen for Firebase Auth state changes
     const unsubscribe = auth().onAuthStateChanged(user => {
-      setIsAuthenticated(!!user);
+      const active = getAuthSession();
+      if (user || active) {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+      }
       setLoading(false);
     });
+
     return unsubscribe;
   }, []);
 
@@ -31,8 +45,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => ({
       isAuthenticated,
       loading,
-      login: () => setIsAuthenticated(true),
+      login: () => {
+        setAuthSession(true);
+        setIsAuthenticated(true);
+      },
       logout: () => {
+        setAuthSession(false);
         auth().signOut().catch(() => {});
         setIsAuthenticated(false);
       },

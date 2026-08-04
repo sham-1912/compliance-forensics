@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
-import { colors, radius, spacing, typography } from '@/theme';
+import { radius, spacing } from '@/theme';
+import { useAppearance } from '@/theme/AppearanceContext';
 
 interface InputFieldProps extends TextInputProps {
   label: string;
@@ -28,23 +29,24 @@ export function InputField({
   ...rest
 }: InputFieldProps) {
   const [focused, setFocused] = useState(false);
+  const { activeColors, scaledTypography } = useAppearance();
   const hasError = !!errorText;
 
   const borderColor = hasError
-    ? colors.error
+    ? activeColors.error
     : focused
-    ? colors.primary
-    : colors.border;
+    ? activeColors.primary
+    : activeColors.border;
 
   return (
     <View style={styles.wrapper}>
-      <Text style={[typography.labelMedium, { color: colors.textSecondary }]}>{label}</Text>
+      <Text style={[scaledTypography.labelMedium, { color: activeColors.textSecondary }]}>{label}</Text>
       <View
         style={[
           styles.inputRow,
           {
             borderColor,
-            backgroundColor: disabled ? colors.surfaceElevated : colors.surface,
+            backgroundColor: disabled ? activeColors.surfaceElevated : activeColors.surface,
           },
         ]}
       >
@@ -61,8 +63,8 @@ export function InputField({
             setFocused(false);
             onBlur?.(e);
           }}
-          placeholderTextColor={colors.textDisabled}
-          style={[typography.bodyLarge, styles.input, { color: colors.textPrimary }]}
+          placeholderTextColor={activeColors.textDisabled}
+          style={[scaledTypography.bodyLarge, styles.input, { color: activeColors.textPrimary }]}
           {...rest}
         />
         {trailingIcon && <View style={styles.icon}>{trailingIcon}</View>}
@@ -70,14 +72,14 @@ export function InputField({
       <View style={styles.footerRow}>
         <Text
           style={[
-            typography.bodySmall,
-            { color: hasError ? colors.error : colors.textSecondary, flex: 1 },
+            scaledTypography.bodySmall,
+            { color: hasError ? activeColors.error : activeColors.textSecondary, flex: 1 },
           ]}
         >
           {errorText ?? helperText ?? ' '}
         </Text>
         {showCharacterCount && maxLength && (
-          <Text style={[typography.bodySmall, { color: colors.textSecondary }]}>
+          <Text style={[scaledTypography.bodySmall, { color: activeColors.textSecondary }]}>
             {(value?.length ?? 0)}/{maxLength}
           </Text>
         )}

@@ -50,6 +50,6 @@ export const colors = {
   // without updating the spec; derive, never invent ad hoc.
   infoNeutral: '#5B8A87', // primary at reduced saturation — role badges, non-status labels
   codeBackground: '#F1F5F4', // monospace/forensic data blocks, distinct from surfaceElevated
-} as const;
+};
 
 export type ColorToken = keyof typeof colors;

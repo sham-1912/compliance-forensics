@@ -8,7 +8,8 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { colors, radius, spacing, typography } from '@/theme';
+import { radius, spacing } from '@/theme';
+import { useAppearance } from '@/theme/AppearanceContext';
 import { Card } from './Card';
 
 export type ProtectionStatus = 'active' | 'paused';
@@ -19,15 +20,10 @@ interface ProtectionStatusCardProps {
   onToggleDemo: () => void;
 }
 
-/**
- * Hero card at the top of the Home Dashboard. `status` is normally driven
- * by real protection state in a shipped app; here it's a local toggle
- * (see `onToggleDemo`) so both the success/active and warning/paused
- * treatments are demonstrable per the spec.
- */
 export function ProtectionStatusCard({ status, lastScanLabel, onToggleDemo }: ProtectionStatusCardProps) {
+  const { activeColors, scaledTypography } = useAppearance();
   const isActive = status === 'active';
-  const tint = isActive ? colors.success : colors.warning;
+  const tint = isActive ? activeColors.success : activeColors.warning;
   const tintBg = isActive ? '#DCFCE7' : '#FEF3C7';
   const ringScale = useSharedValue(1);
   const ringOpacity = useSharedValue(0.5);
@@ -72,20 +68,20 @@ export function ProtectionStatusCard({ status, lastScanLabel, onToggleDemo }: Pr
           )}
         </View>
         <View style={styles.textCol}>
-          <Text style={[typography.titleLarge, { color: colors.textPrimary }]}>
+          <Text style={[scaledTypography.titleLarge, { color: activeColors.textPrimary }]}>
             {isActive ? 'Protection Active' : 'Protection Paused'}
           </Text>
-          <Text style={[typography.bodySmall, styles.subtext]}>
+          <Text style={[scaledTypography.bodySmall, { color: activeColors.textSecondary, marginTop: 2 }]}>
             {isActive
               ? 'Consent verification is running on all incoming calls.'
               : 'Incoming calls will not be checked until you resume.'}
           </Text>
         </View>
       </View>
-      <View style={styles.footerRow}>
-        <Text style={[typography.bodySmall, styles.metaText]}>Last scan: {lastScanLabel}</Text>
+      <View style={[styles.footerRow, { borderTopColor: activeColors.border }]}>
+        <Text style={[scaledTypography.bodySmall, { color: activeColors.textSecondary }]}>Last scan: {lastScanLabel}</Text>
         <Pressable onPress={onToggleDemo} hitSlop={8} accessibilityRole="button" accessibilityLabel="Toggle protection status (demo)">
-          <Text style={[typography.labelSmall, { color: colors.primary }]}>
+          <Text style={[scaledTypography.labelSmall, { color: activeColors.primary }]}>
             {isActive ? 'Pause (demo)' : 'Resume (demo)'}
           </Text>
         </Pressable>
@@ -113,7 +109,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   textCol: { flex: 1 },
-  subtext: { color: colors.textSecondary, marginTop: 2 },
   footerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -121,7 +116,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
-  metaText: { color: colors.textSecondary },
 });
