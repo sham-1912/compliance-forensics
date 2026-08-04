@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "Compliance Forensics Engine",
+    "slug": "compliance-forensics-engine",
+    "icon": "./assets/icon.png",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#ffffff"
+    },
+    "platforms": [
+      "android"
+    ],
+    "android": {
+      "package": "com.sham.complianceforensics",
+      "googleServicesFile": "./google-services.json"
+    },
+    "plugins": [
+      "@react-native-firebase/app"
+    ],
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
